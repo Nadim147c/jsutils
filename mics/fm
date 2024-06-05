@@ -1,0 +1,17 @@
+#!/usr/bin/env zx
+"use strict"
+
+import "zx/globals"
+
+const stdinContent = await stdin()
+
+const input = stdinContent
+    .split("\n")
+    .map((line, i) => `${i + 1} ${line}`)
+    .join("\n")
+
+const env = process.env
+env.CONTENT = stdinContent
+
+const $$ = $({ input, env, nothrow: true })
+await $$`fzf --border-label 'Fuzzy Help Reader' --preview-label 'Grep Preview' --preview='echo $CONTENT | tail -n +{1} | bat'`
