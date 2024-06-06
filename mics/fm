@@ -3,6 +3,8 @@
 
 import "zx/globals"
 
+const exit = process.exit
+
 const stdinContent = await stdin()
 
 const input = stdinContent
@@ -14,4 +16,11 @@ const env = process.env
 env.CONTENT = stdinContent
 
 const $$ = $({ input, env, nothrow: true })
-await $$`fzf --border-label 'Fuzzy Help Reader' --preview-label 'Grep Preview' --preview='echo $CONTENT | tail -n +{1} | bat'`
+const lineNumber =
+    await $$`fzf --border-label 'Fuzzy Help Reader' --preview-label 'Grep Preview' --preview='echo $CONTENT | tail -n +{1} | cm' | cut -d ' ' -f1`
+
+if (!lineNumber.stdout.trim()) exit(0)
+
+const cut = await $({ input: stdinContent })`tail -n ${`+${lineNumber.stdout.trim()}`} | head -n 20 | cm`
+
+console.log(cut.stdout)
