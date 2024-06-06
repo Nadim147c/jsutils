@@ -1,0 +1,25 @@
+#!/usr/bin/env zx
+"use strict"
+
+import "zx/globals"
+import { Chalk } from "chalk"
+
+const stdinContent = await stdin()
+
+process.env.FORCE_COLOR = 3
+
+const $$ = $({ input: stdinContent, sync: true })
+// Highlight Headers
+const content = $$`sed -r 's/^(\\s*[A-Z].*:\\s*)$/\\x1B[31m\\1\\x1B[39m/'`.stdout
+
+const c = new Chalk({ level: 3 })
+
+const preview = content
+    // Highlight Headers
+    // .replace(/^\s*[A-Z]\w*:\s*$/g, (res) => chalk.red(res)) // Doesn't works cuz js regex sucks
+    // Highlight options [-something|--some-thing]
+    .replace(/\s+-?(-\w+){1,5}/g, (res) => c.cyanBright(res))
+    // Highlight option capitalized valoe [-o VALUE]
+    .replace(/(?<=(.*-?(-\w+){1,5}.*(\s*|=)))([A-Z_\]\[:\s]+\s\s+)/g, (res) => c.yellowBright(res))
+
+console.log(preview)
