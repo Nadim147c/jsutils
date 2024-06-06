@@ -139,7 +139,7 @@ if (typeof argv.bottom === "number") crop.bottom(argv.bottom)
 if (typeof argv.right === "number") crop.right(argv.right)
 if (typeof argv.left === "number") crop.left(argv.left)
 
-let outputPath = argv.i ?? argv._?.[2]
+let outputPath = argv.o ?? argv._?.[1]
 if (!outputPath) {
     const inputPathSplit = videoPath.split(".")
     inputPathSplit.splice(inputPathSplit.length - 1, 0, `${crop.w}x${crop.h}`)
