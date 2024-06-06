@@ -12,8 +12,10 @@ const exit = process.exit
  * section: string
  * cookies: string
  * browser: string
+ * ext: string
  * c: string
  * resolution: string|number
+ * threads: number
  * r: string|number
  * sponsorblock: boolean
  * help: boolean
@@ -29,6 +31,8 @@ const argv = minimist(process.argv.slice(3), {
 })
 
 if (typeof argv.sponsorblock === "undefined") argv.sponsorblock = true
+if (typeof argv.threads === "undefined") argv.threads = 1
+if (typeof argv.ext === "undefined") argv.ext = "mp4"
 
 if (argv.debug) console.log(argv)
 
@@ -51,6 +55,10 @@ if (!argv.resolution) {
 const ytDlpArgs = [
     "--format",
     format,
+    "--merge-output-format",
+    argv.ext,
+    "--concurrent-fragments",
+    argv.threads,
     "--output",
     outputTemplate,
     "--add-metadata",
