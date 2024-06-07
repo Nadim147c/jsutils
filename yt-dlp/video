@@ -1,4 +1,5 @@
 #!/usr/bin/env zx
+
 "use strict"
 
 import "zx/globals"
@@ -16,30 +17,44 @@ const exit = process.exit
  * c: string
  * resolution: string|number
  * threads: number
- * r: string|number
  * sponsorblock: boolean
  * help: boolean
  * debug: boolean
  * h: boolean
  * }} */
 const argv = minimist(process.argv.slice(3), {
-    alias: {
-        help: ["h"],
-        r: ["resolution"],
-    },
+    alias: { help: ["h"], resolution: ["r"] },
     boolean: ["help", "sponsorblock", "debug"],
 })
+
+if (argv.help) {
+    const argument = `\
+    URL url of the video to download.
+`
+    const options = `\
+    --section  STRING
+    -c, --cookies  STRING
+    --browser  STRING
+    --ext  STRING
+    -r, --resolution  MAX|NUMBER
+    --threads  NUMBER
+    --no-sponsorblock
+    --help
+    --debug
+`
+    let helpContent = "Usages: video [OPTIONS] [URL]\n"
+    helpContent += `\nArguments:\n${argument}`
+    helpContent += `\nOptions: \n${options}`
+    const colored = await $`echo ${helpContent} | cm`
+    console.log(colored.stdout.trim())
+    exit(0)
+}
 
 if (typeof argv.sponsorblock === "undefined") argv.sponsorblock = true
 if (typeof argv.threads === "undefined") argv.threads = 1
 if (typeof argv.ext === "undefined") argv.ext = "mp4"
 
 if (argv.debug) console.log(argv)
-
-if (argv.help) {
-    console.log("No help for you man")
-    exit(0)
-}
 
 const outputTemplate = `${os.homedir()}/Downloads/Video/%(title)s-%(id)s.%(ext)s`
 

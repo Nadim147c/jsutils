@@ -9,19 +9,37 @@ const exit = process.exit
 
 const argv = minimist(process.argv.slice(3), {
     string: ["ratio"],
-    alias: {
-        help: ["h"],
-        preview: ["p"],
-    },
+    alias: { help: ["h"], preview: ["p"] },
     boolean: ["help", "preview", "debug"],
 })
 
-if (argv.debug) console.log(argv)
-
 if (argv.help) {
-    console.log("No help for you man")
+    const argument = `\
+    INPUT_VIDEO Path to the input video.
+    OUTPUT_VIDEO Path to the input video.
+`
+    const options = `\
+    --ratio  NUMBER/NUMBER
+    --threads  NUMBER
+    --top  NUMBER
+    --bottom  NUMBER
+    --right  NUMBER
+    --left  NUMBER
+    --around  NUMBER
+    --white
+    -p, --preview
+    -h, --help
+    --debug
+`
+    let helpContent = "Usages: video [OPTIONS] [INPUT_VIDEO] [OUTPUT_VIDEO*]\n"
+    helpContent += `\nArguments:\n${argument}`
+    helpContent += `\nOptions: \n${options}`
+    const colored = await $`echo ${helpContent} | cm`
+    console.log(colored.stdout.trim())
     exit(0)
 }
+
+if (argv.debug) console.log(argv)
 
 /** @type {string} */
 const videoPath = argv.i ?? argv._?.[0]
@@ -138,6 +156,12 @@ if (typeof argv.top === "number") crop.top(argv.top)
 if (typeof argv.bottom === "number") crop.bottom(argv.bottom)
 if (typeof argv.right === "number") crop.right(argv.right)
 if (typeof argv.left === "number") crop.left(argv.left)
+if (typeof argv.around === "number") {
+    crop.top(argv.around)
+    crop.bottom(argv.around)
+    crop.right(argv.around)
+    crop.left(argv.around)
+}
 
 let outputPath = argv.o ?? argv._?.[1]
 if (!outputPath) {
