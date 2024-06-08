@@ -1,8 +1,23 @@
 #!/usr/bin/env zx
 "use strict"
 
-import "zx/globals"
 import { Chalk } from "chalk"
+import "zx/globals"
+import Help from "../helper/help.mjs"
+
+const exit = process.exit
+
+const argv = minimist(process.argv.slice(3), {
+    alias: { help: ["h"] },
+    boolean: ["help"],
+})
+
+if (argv.help) {
+    const helper = new Help("Usage: help_command | fm")
+    helper.option("-h, --help", "Prints the help menu")
+    echo($({ input: helper.toString(), sync: true })`cm`)
+    exit(0)
+}
 
 const stdinContent = await stdin()
 

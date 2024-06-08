@@ -2,8 +2,9 @@
 
 "use strict"
 
-import "zx/globals"
 import os from "os"
+import "zx/globals"
+import Help from "../helper/help.mjs"
 
 const exit = process.exit
 
@@ -14,13 +15,11 @@ const exit = process.exit
  * cookies: string
  * browser: string
  * ext: string
- * c: string
  * resolution: string|number
  * threads: number
  * sponsorblock: boolean
  * help: boolean
  * debug: boolean
- * h: boolean
  * }} */
 const argv = minimist(process.argv.slice(3), {
     alias: { help: ["h"], resolution: ["r"] },
@@ -28,25 +27,20 @@ const argv = minimist(process.argv.slice(3), {
 })
 
 if (argv.help) {
-    const argument = `\
-    URL url of the video to download.
-`
-    const options = `\
-    --section  STRING
-    -c, --cookies  STRING
-    --browser  STRING
-    --ext  STRING
-    -r, --resolution  MAX|NUMBER
-    --threads  NUMBER
-    --no-sponsorblock
-    --help
-    --debug
-`
-    let helpContent = "Usages: video [OPTIONS] [URL]\n"
-    helpContent += `\nArguments:\n${argument}`
-    helpContent += `\nOptions: \n${options}`
-    const colored = await $`echo ${helpContent} | cm`
-    console.log(colored.stdout.trim())
+    const helper = new Help("Usage: video [OPTIONS] URL")
+    helper.argument("URL", "url of the video to download")
+    helper
+        .option("--section REGEX", "Section of the video to download. Timestamp must start with * (ex: '*0.11-0.50')")
+        .option("-c, --cookies FILE", "Netscape formatted file to read cookies from and dump cookie jar in")
+        .option("--browser BROWSER", "Name of the browser to use cookies from")
+        .option("--ext FORMAT", "Containers that may be used when merging format")
+        .option("-r, --resolution", "Resolution to download video. Use max for maximum resolution")
+        .option("-threads NUMBER", "Number of concurrent downloads. Default is 1")
+        .option("-no-sponsorblock", "Disable sponsorblock for downloaded video. Default is on")
+        .option("-h, --help", "Prints the help menu")
+        .option("--debug", "Prints the debug info")
+
+    echo($({ input: helper.toString(), sync: true })`cm`)
     exit(0)
 }
 

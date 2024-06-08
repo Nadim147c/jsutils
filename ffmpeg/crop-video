@@ -1,9 +1,10 @@
 #!/usr/bin/env zx
 "use strict"
 
-import "zx/globals"
 import cliProgress from "cli-progress"
 import inquirer from "inquirer"
+import "zx/globals"
+import Help from "../helper/help.mjs"
 
 const exit = process.exit
 
@@ -14,28 +15,26 @@ const argv = minimist(process.argv.slice(3), {
 })
 
 if (argv.help) {
-    const argument = `\
-    INPUT_VIDEO Path to the input video.
-    OUTPUT_VIDEO Path to the input video.
-`
-    const options = `\
-    --ratio  NUMBER/NUMBER
-    --threads  NUMBER
-    --top  NUMBER
-    --bottom  NUMBER
-    --right  NUMBER
-    --left  NUMBER
-    --around  NUMBER
-    --white
-    -p, --preview
-    -h, --help
-    --debug
-`
-    let helpContent = "Usages: video [OPTIONS] [INPUT_VIDEO] [OUTPUT_VIDEO*]\n"
-    helpContent += `\nArguments:\n${argument}`
-    helpContent += `\nOptions: \n${options}`
-    const colored = await $`echo ${helpContent} | cm`
-    console.log(colored.stdout.trim())
+    const helper = new Help("Usage: crop-video [OPTIONS] INPUT [OUTPUT]")
+    helper.argument("INPUT", "Path to input video").argument("OUTPUT", "Path to output video. (optional)")
+    helper
+        .option(
+            "--ratio ASPECT_RATIO",
+            "Use a ratio instead of auto detect to crop. (ex: --ratio 1/2, --ratio 18*9, --ratio 16:9)"
+        )
+        .option("--auto", "Auto detect black bar to crop. Enable by default but disabled when --ratio is passed.")
+        .option("--white", "Auto detect white bar instead of black to crop")
+        .option("--top PIXEL", "Number of pixel to add to the top after calculating the crop")
+        .option("--bottom PIXEL", "Number of pixel to add to the bottom after calculating the crop")
+        .option("--right PIXEL", "Number of pixel to add to the right after calculating the crop")
+        .option("--left PIXEL", "Number of pixel to add to the left after calculating the crop")
+        .option("--around PIXEL", "Number of pixel to add to the around after calculating the crop")
+        .option("--threads NUMBER", "Number of threads to use when transcoding. Default is 4")
+        .option("--preview", "Show a preview of the crop instead of outputting it")
+        .option("-h, --help", "Prints the help menu")
+        .option("--debug", "Prints the debug info")
+
+    echo($({ input: helper.toString(), sync: true })`cm`)
     exit(0)
 }
 
@@ -127,7 +126,7 @@ class Crop {
 let crop
 
 if (argv.ratio) {
-    const [cropWidth, cropHeight] = argv.ratio.split(/\/|x/).map(parseFloat)
+    const [cropWidth, cropHeight] = argv.ratio.split(/\/|x|:/).map(parseFloat)
 
     const rw = videoWidth / cropWidth
     const rh = videoHeight / cropHeight
