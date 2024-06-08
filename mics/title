@@ -1,0 +1,14 @@
+#!/usr/bin/env zx
+"use strict"
+
+import "zx/globals"
+
+let title = process.argv.slice(3).join().trim()
+
+if (!title) {
+    title = await question("What will be the title of terminal? ")
+}
+
+const printTitle = "\u001B]2;" + title + "\u0007"
+
+process.stdout.write(printTitle)
