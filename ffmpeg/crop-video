@@ -4,7 +4,7 @@
 import cliProgress from "cli-progress"
 import inquirer from "inquirer"
 import "zx/globals"
-import Help from "../helper/help.mjs"
+import Help from "../api/help.mjs"
 
 const exit = process.exit
 

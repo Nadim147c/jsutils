@@ -4,7 +4,7 @@
 
 import os from "os"
 import "zx/globals"
-import Help from "../helper/help.mjs"
+import Help from "../api/help.mjs"
 
 const exit = process.exit
 

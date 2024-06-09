@@ -3,7 +3,7 @@
 
 import { Chalk } from "chalk"
 import "zx/globals"
-import Help from "../helper/help.mjs"
+import Help from "../api/help.mjs"
 
 const exit = process.exit
 
