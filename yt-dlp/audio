@@ -15,7 +15,6 @@ const exit = process.exit
  * cookies: string
  * browser: string
  * threads: number
- * 'yt-music': boolean
  * sponsorblock: boolean
  * help: boolean
  * debug: boolean
@@ -34,7 +33,6 @@ if (argv.help) {
         .option("--browser BROWSER", "Name of the browser to use cookies from")
         .option("--threads NUMBER", "Number of concurrent downloads. Default is 1")
         .option("--no-sponsorblock", "Disable sponsorblock for downloaded video. Default is on")
-        .option("--yt-music", "Use youtube music to search audio instead of youtube when valid url isn't passed")
         .option("-h, --help", "Prints the help menu")
         .option("--debug", "Prints the debug info")
 
@@ -80,12 +78,7 @@ if (!url) {
 try {
     url = new URL(url)
 } catch (err) {
-    if (argv["yt-music"]) {
-        ytDlpArgs.push("--playlist-end", "1")
-        url = `https://music.youtube.com/search?q=${url}`
-    } else {
-        url = `ytsearch:${url}`
-    }
+    url = `ytsearch:${url}`
 }
 
 await $`yt-dlp ${ytDlpArgs} ${url}`.verbose(true)
