@@ -17,6 +17,7 @@ if (argv.help) {
     exit(0)
 }
 
-const text = process.argv.slice(3).join().trim() ?? (await stdin())
+let text = process.argv.slice(3).join().trim()
+if (!text) text = await stdin()
 
 Terminal.copy(text)
