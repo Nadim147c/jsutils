@@ -18,9 +18,9 @@ export default class Ffmpeg {
          * @returns {number}
          */
         const durationToSeconds = (duration) => {
-            const pieces = duration.split(":")
+            const pieces = duration.split(":").reverse()
             let seconds = 0
-            for (let i = pieces.length - 1; i >= 0; i--) {
+            for (let i = 0; i < pieces.length; i++) {
                 seconds += parseFloat(pieces[i]) * 60 ** i
             }
             return seconds
@@ -63,6 +63,7 @@ export default class Ffmpeg {
                 // prettier-ignore
                 const seconds = durationToSeconds(duration)
                 totalFrames = seconds * parseFloat(streamFPS)
+                console.log({ seconds, totalFrames })
             }
 
             const PROGRESS_REGEX = /frame= *(\d+) *fps= *(\d+).*speed=(\d+|\d+\.\d+)x/i
