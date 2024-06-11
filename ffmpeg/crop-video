@@ -51,13 +51,10 @@ if (!videoPath) {
     exit(1)
 }
 
-log(`Input video path: ${chalk.cyan(videoPath)}`)
+console.log(`Input video path: ${chalk.cyan(videoPath)}`)
 
-const ffprobeInfo = await spinner(
-    "Retrieving height, width and total frame",
-    () =>
-        $`ffprobe -v error -select_streams v:0 -show_entries format=duration -show_entries stream=width,height,r_frame_rate -of json ${videoPath}`
-)
+const ffprobeProcess = $`ffprobe -v error -select_streams v:0 -show_entries format=duration -show_entries stream=width,height -of json ${videoPath}`
+const ffprobeInfo = await spinner("Retrieving height and width", () => ffprobeProcess)
 
 const ffprobeJson = JSON.parse(ffprobeInfo.stdout)
 
@@ -66,10 +63,6 @@ if (!ffprobeJson.streams.length) {
     exit(1)
 }
 
-/** @type {number} */
-const fps = eval(ffprobeJson.streams[0].r_frame_rate)
-const duration = parseFloat(ffprobeJson.format.duration)
-const totalFrames = Math.round(duration * fps)
 /** @type {number} */
 const videoWidth = ffprobeJson.streams[0].width
 /** @type {number} */
@@ -175,6 +168,6 @@ if (argv.preview) {
 } else {
     if (argv.debug) console.log(crop)
 
-    const ffmpegProgress = $`ffmpeg -i ${videoPath} -threads ${argv.threads ?? 4} -vf ${crop} ${outputPath} -f null - 2>&1`
-    await Ffmpeg.progress(ffmpegProgress)
+    const ffmpegProgress = $`ffmpeg -i ${videoPath} -threads ${argv.threads ?? 4} -vf ${crop} ${outputPath} 2>&1`
+    await Ffmpeg.progress(ffmpegProgress, argv)
 }

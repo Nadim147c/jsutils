@@ -6,14 +6,14 @@ import Ffmpeg from "../api/ffmpeg.mjs"
 
 const argv = minimist(process.argv.slice(3), {
     alias: { help: ["h"] },
-    boolean: ["help"],
+    boolean: ["help", "debug"],
 })
 
-const args = process.argv.slice(3)
+if (argv.debug) console.log(argv)
 
-if (argv.help || !args.length) {
-    console.error("ffpro is wrapper for ffmpeg")
-}
+const args = process.argv.slice(3).filter((item) => item !== "--debug")
 
-const ffmpegProcess = $`ffmpeg ${args} -f null - 2>&1`
-await Ffmpeg.progress(ffmpegProcess)
+if (argv.help || !args.length) console.error("ffpro is wrapper for ffmpeg")
+
+const ffmpegProcess = $`ffmpeg ${args} 2>&1`
+Ffmpeg.progress(ffmpegProcess, argv)

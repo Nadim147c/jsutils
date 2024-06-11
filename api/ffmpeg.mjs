@@ -1,15 +1,45 @@
 import logUpdate from "log-update"
+import "zx/globals"
 
 export default class Ffmpeg {
     constructor() {}
 
     /**
      * @param {import("zx").ProcessPromise} ffmpegProcess Standard output
+     * @param {minimist.ParsedArgs} argv Parsed arguments of process
      */
-    static async progress(ffmpegProcess) {
+    static async progress(ffmpegProcess, argv) {
         let totalFrames
         let streamFPS
         let duration
+
+        /**
+         * @param {string} duration
+         * @returns {number}
+         */
+        const durationToSeconds = (duration) => {
+            const pieces = duration.split(":")
+            let seconds = 0
+            for (let i = pieces.length - 1; i >= 0; i--) {
+                seconds += parseFloat(pieces[i]) * 60 ** i
+            }
+            return seconds
+        }
+
+        if (argv.t && argv.o) {
+            const toIndex = process.argv.indexOf("-to")
+            if (toIndex !== -1 && process.argv.at(toIndex + 1)) {
+                duration = process.argv.at(toIndex + 1)
+
+                const startIndex = process.argv.indexOf("-ss")
+                if (startIndex !== -1 && process.argv.at(startIndex + 1)) {
+                    const start = process.argv.at(startIndex + 1)
+                    duration = (durationToSeconds(duration) - durationToSeconds(start)).toString()
+                }
+            }
+        } else if (typeof argv.t === "string" || typeof argv.t === "number") {
+            duration = `${argv.t}`
+        }
 
         for await (const chunk of ffmpegProcess.stdout) {
             /** @type {string} */
@@ -30,9 +60,8 @@ export default class Ffmpeg {
             if (!streamFPS) streamFPS = data.match(FPS_REGEX)?.[1]
 
             if (duration && streamFPS && !totalFrames) {
-                const convertToSec = (a, c, i) => a + c * 60 ** i
                 // prettier-ignore
-                const seconds = duration.split(":").map((x) => parseFloat(x)).reverse().reduce(convertToSec, 0)
+                const seconds = durationToSeconds(duration)
                 totalFrames = seconds * parseFloat(streamFPS)
             }
 
