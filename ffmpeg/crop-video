@@ -1,10 +1,9 @@
 #!/usr/bin/env zx
 "use strict"
 
-import cliProgress from "cli-progress"
-import inquirer from "inquirer"
 import "zx/globals"
 import Help from "../api/help.mjs"
+import Ffmpeg from "../api/ffmpeg.mjs"
 
 const exit = process.exit
 
@@ -169,19 +168,6 @@ if (!outputPath) {
     outputPath = inputPathSplit.join(".")
 }
 
-function formatTime(sec_num) {
-    if (sec_num === Infinity) return "N/A"
-    let hours = Math.floor(sec_num / 3600)
-    let minutes = Math.floor((sec_num - hours * 3600) / 60)
-    let seconds = sec_num - hours * 3600 - minutes * 60
-
-    if (hours < 10) hours = "0" + hours
-    if (minutes < 10) minutes = "0" + minutes
-    if (seconds < 10) seconds = "0" + seconds.toFixed(2)
-
-    return `${hours}:${minutes}:${typeof seconds === "string" ? seconds : seconds.toFixed(2)}`
-}
-
 if (argv.preview) {
     const previewRatio = Math.max(crop.w, crop.h) / 500
     const filter = `${crop},scale=${Math.round(crop.w / previewRatio)}:${Math.round(crop.h / previewRatio)}`
@@ -189,48 +175,6 @@ if (argv.preview) {
 } else {
     if (argv.debug) console.log(crop)
 
-    if ((await $`[[ -d ${outputPath} ]]`.exitCode) !== 0) {
-        const response = await inquirer.prompt([
-            {
-                name: "answer",
-                type: "confirm",
-                message: `File ${outputPath} already exists. Overright it? `,
-            },
-        ])
-        if (!response.answer) exit(0)
-    }
-
-    const ffmpegProcess = $`ffmpeg -i ${videoPath} -hide_banner -threads ${argv.threads ?? 4} -y -vf ${crop} ${outputPath} -f null - 2>&1`
-
-    const percentage = "{percentage}%"
-    const frames = "{value}/{total} Frames"
-    const fps = "fps: {fps}"
-    const eta = "ETA: {remaining}"
-    const bar = new cliProgress.SingleBar({
-        format: `ffmpeg : ${chalk.green("{bar}")} | ${percentage} || ${frames} || ${fps} || ${eta}`,
-        barCompleteChar: "\u2588",
-        barIncompleteChar: "\u2591",
-        hideCursor: true,
-    })
-
-    let started = false
-    for await (const chunk of ffmpegProcess.stdout) {
-        /** @type {string} */
-        const data = chunk.toString()
-        const regex = /frame= *(\d+) *fps= *(\d+)/i
-        const ffmpegProgress = data.match(regex)
-        if (!ffmpegProgress) continue
-        const frames = parseInt(ffmpegProgress[1])
-        const fps = parseInt(ffmpegProgress[2])
-        const remaining = formatTime((totalFrames - frames) / fps)
-
-        if (!started) {
-            bar.start(totalFrames, frames, { fps, remaining })
-            started = true
-        }
-
-        bar.update(frames, { fps, remaining })
-    }
-    bar.update(totalFrames)
-    bar.stop()
+    const ffmpegProgress = $`ffmpeg -i ${videoPath} -threads ${argv.threads ?? 4} -vf ${crop} ${outputPath} -f null - 2>&1`
+    await Ffmpeg.progress(ffmpegProgress)
 }
