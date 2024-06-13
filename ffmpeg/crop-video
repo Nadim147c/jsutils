@@ -169,5 +169,5 @@ if (argv.preview) {
     if (argv.debug) console.log(crop)
 
     const ffmpegProgress = $`ffmpeg -i ${videoPath} -threads ${argv.threads ?? 4} -vf ${crop} ${outputPath} 2>&1`
-    await Ffmpeg.progress(ffmpegProgress, argv)
+    await new Ffmpeg().progress(ffmpegProgress, [])
 }

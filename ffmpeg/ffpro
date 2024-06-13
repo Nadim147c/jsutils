@@ -16,4 +16,4 @@ const args = process.argv.slice(3).filter((item) => item !== "--debug")
 if (argv.help || !args.length) console.error("ffpro is wrapper for ffmpeg")
 
 const ffmpegProcess = $`ffmpeg ${args} 2>&1`
-Ffmpeg.progress(ffmpegProcess, argv)
+await new Ffmpeg().progress(ffmpegProcess)

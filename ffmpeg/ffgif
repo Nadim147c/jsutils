@@ -2,10 +2,10 @@
 "use strict"
 
 import crypto from "crypto"
+import { rm } from "fs/promises"
 import "zx/globals"
-import Help from "../api/help.mjs"
-
 import Ffmpeg from "../api/ffmpeg.mjs"
+import Help from "../api/help.mjs"
 
 const exit = process.exit
 
@@ -62,7 +62,8 @@ const videoWidth = ffprobeJson.streams[0].width
 const videoHeight = ffprobeJson.streams[0].height
 
 const palette = `${crypto.randomUUID()}.png`
-await $`ffmpeg -i ${videoPath} -vf palettegen -threads ${argv.threads ?? 4} ${palette}`.quiet()
+const palettegenProcess = $`ffmpeg -i ${videoPath} -vf palettegen -threads ${argv.threads ?? 4} ${palette}`.quiet()
+await spinner("Generating palette for gif...", () => palettegenProcess)
 
 let outputPath = argv.o ?? argv._?.[1]
 if (!outputPath) {
@@ -77,5 +78,6 @@ if (argv.preview) {
     await $`ffplay -i ${videoPath} -i ${palette} -loop ${argv.loop ?? 0} -filter_complex ${filterGraph}`.quiet()
 } else {
     const ffmpegProcess = $`ffmpeg -i ${videoPath} -i ${palette} -loop ${argv.loop ?? 0} -threads ${argv.threads ?? 4} -filter_complex ${filterGraph} ${outputPath} 2>&1`
-    await Ffmpeg.progress(ffmpegProcess, argv)
+    await new Ffmpeg().progress(ffmpegProcess, ["-filter_complex", filterGraph])
+    await rm(palette)
 }
