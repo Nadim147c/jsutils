@@ -3,18 +3,13 @@ import logUpdate from "log-update"
 export default class Ffmpeg {
     constructor() {}
 
-    /**
-     * @param {import("zx").ProcessPromise} ffmpegProcess Standard output
-     * @param {string[]} args Parsed arguments of process
-     */
-    async progress(ffmpegProcess, args = process.argv) {
+    static async progress(ffmpegProcess: ProcessPromise, args = process.argv) {
         let totalFrames
-        let streamFPS = this.parseFrameRateFromArgv(args)
-        let duration = this.parseDurationFromArgv(args)
+        let streamFPS = Ffmpeg.parseFrameRateFromArgv(args)
+        let duration = Ffmpeg.parseDurationFromArgv(args)
 
         for await (const chunk of ffmpegProcess.stdout) {
-            /** @type {string} */
-            const data = chunk.toString()
+            const data = chunk.toString() as string
 
             const OVERWRITE_REGEX = /File .+ already exists\. Overwrite\? \[y\/N\]/
             const overwrite = data.match(OVERWRITE_REGEX)
@@ -35,7 +30,7 @@ export default class Ffmpeg {
 
             if (duration && streamFPS && !totalFrames) {
                 // prettier-ignore
-                const seconds = this.durationToSeconds(duration)
+                const seconds = Ffmpeg.durationToSeconds(duration)
                 totalFrames = seconds * streamFPS
             }
 
@@ -71,11 +66,7 @@ export default class Ffmpeg {
         logUpdate.done()
     }
 
-    /**
-     * @param {string[]} args minimist parsed arguments
-     * @returns {number|undefined} Parsed fps
-     */
-    parseFrameRateFromArgv(args) {
+    static parseFrameRateFromArgv(args: string[]) {
         let inputFPS
 
         const fpsMaxIndex = args.indexOf("-fpsmax")
@@ -114,19 +105,14 @@ export default class Ffmpeg {
         const frameRateAbbreviations = {
             ntsc: 30000 / 1001,
             pal: 25,
-        }
-        const abbreviation = inputFPS.toLowerCase()
+        } as const
+        const abbreviation = inputFPS.toLowerCase() as keyof typeof frameRateAbbreviations
         if (abbreviation in frameRateAbbreviations) {
-            // @ts-ignore
             return frameRateAbbreviations[abbreviation]
         }
     }
 
-    /**
-     * @param {string | number} duration Duration value
-     * @returns {number} Parsed duration in seconds
-     */
-    durationToSeconds(duration) {
+    static durationToSeconds(duration: string | number) {
         if (typeof duration === "number") return duration
         const pieces = duration.split(":").reverse()
         let seconds = 0
@@ -136,11 +122,7 @@ export default class Ffmpeg {
         return seconds
     }
 
-    /**
-     * @param {string[]} args Parsed arguments by minimist
-     * @returns {string | undefined} Parse duration from arguments
-     */
-    parseDurationFromArgv(args) {
+    static parseDurationFromArgv(args: string[]) {
         const timeIndex = args.indexOf("-t")
         if (timeIndex !== -1) return args.at(timeIndex + 1)
 
@@ -153,7 +135,8 @@ export default class Ffmpeg {
             if (startIndex === -1 || !args.at(startIndex + 1)) return duration
 
             const start = args.at(startIndex + 1)
-            if (start && duration) return (this.durationToSeconds(duration) - this.durationToSeconds(start)).toString()
+            if (start && duration)
+                return (Ffmpeg.durationToSeconds(duration) - Ffmpeg.durationToSeconds(start)).toString()
         }
     }
 }

@@ -1,3 +1,2 @@
 node_modules
-*.mjs
-!api/*.mjs
+bin

@@ -1,8 +1,8 @@
 #!/usr/bin/env zx
-"use strict"
 
 import "zx/globals"
-import Terminal from "../api/terminal.mjs"
+import Help from "../api/help.js"
+import Terminal from "../api/terminal.js"
 
 const argv = minimist(process.argv.slice(3), {
     alias: { help: ["h"] },
@@ -12,8 +12,8 @@ const argv = minimist(process.argv.slice(3), {
 if (argv.help) {
     const helper = new Help("Usage: 'command | copy' 'copy text'")
     helper.option("-h, --help", "Prints the help menu")
-    echo($({ input: helper.toString(), sync: true })`cm`)
-    exit(0)
+    helper.print()
+    process.exit(0)
 }
 
 let title = process.argv.slice(3).join().trim()

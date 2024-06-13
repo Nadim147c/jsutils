@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+pnpm build
+
+find 'bin' -type f | rg "\.js$" | rg -v 'api' | while read -r file; do
+	bin_name=$(echo "$file" | sed -r 's/\.js//')
+	echo "Renaming $file to $bin_name"
+	mv "$file" "$bin_name"
+	sudo chmod +x "$bin_name"
+done

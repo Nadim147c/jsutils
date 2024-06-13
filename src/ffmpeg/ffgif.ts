@@ -4,8 +4,8 @@
 import crypto from "crypto"
 import { rm } from "fs/promises"
 import "zx/globals"
-import Ffmpeg from "../api/ffmpeg.mjs"
-import Help from "../api/help.mjs"
+import Ffmpeg from "../api/ffmpeg.js"
+import Help from "../api/help.js"
 
 const exit = process.exit
 
@@ -78,6 +78,6 @@ if (argv.preview) {
     await $`ffplay -i ${videoPath} -i ${palette} -loop ${argv.loop ?? 0} -filter_complex ${filterGraph}`.quiet()
 } else {
     const ffmpegProcess = $`ffmpeg -i ${videoPath} -i ${palette} -loop ${argv.loop ?? 0} -threads ${argv.threads ?? 4} -filter_complex ${filterGraph} ${outputPath} 2>&1`
-    await new Ffmpeg().progress(ffmpegProcess, ["-filter_complex", filterGraph])
+    await Ffmpeg.progress(ffmpegProcess, ["-filter_complex", filterGraph])
     await rm(palette)
 }

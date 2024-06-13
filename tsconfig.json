@@ -1,17 +1,14 @@
 {
     "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/tsconfig.json",
     "compilerOptions": {
-        "target": "es2016",
+        "target": "ES2022",
         "module": "NodeNext",
+        "outDir": "bin",
         "allowJs": true,
         "checkJs": true,
-        "noEmit": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "skipLibCheck": true
     },
-    "include": [
-        "ffmpeg/*"
-    ],
 }

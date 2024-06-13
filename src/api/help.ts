@@ -1,49 +1,37 @@
-"use strict"
+type Argument = {
+    argument: string
+    description: string
+}
+
+type Option = {
+    option: string
+    description: string
+}
 
 export default class Help {
-    /**@type {{option:string, description: string}[]} */
-    _options = []
+    private _options: Option[] = []
 
     /**@type {{argument:string, description: string}[]} */
-    _arguments = []
+    private _arguments: Argument[] = []
 
     _usages = "command [OPTIONS] [ARGUMENTS] "
-    /**@param {string} usages */
-    constructor(usages) {
-        this._usages = usages
+    constructor(usages?: string) {
+        if (usages) this._usages = usages
         this._options = []
         this._arguments = []
     }
 
-    /**
-     * Add option to help object.
-     * @param {string} option
-     * @param {string} description
-     * @returns {this}
-     */
-    option(option, description) {
+    option(option: string, description: string) {
         this._options.push({ option, description })
         return this
     }
 
-    /**
-     * Add argument to help object.
-     * @param {string} argument
-     * @param {string} description
-     * @returns {this}
-     */
-    argument(argument, description) {
+    argument(argument: string, description: string) {
         this._arguments.push({ argument, description })
         return this
     }
 
-    /**
-     * @param {string} val
-     * @param {string} des
-     * @param {number} maxSize
-     * @returns {string}
-     */
-    _warp(val, des, maxSize) {
+    _warp(val: string, des: string, maxSize: number) {
         const tab = " ".repeat(4)
         const columnSize = process.stdout.columns
         const indentSize = maxSize + 8

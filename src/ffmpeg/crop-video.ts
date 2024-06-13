@@ -2,10 +2,8 @@
 "use strict"
 
 import "zx/globals"
-import Help from "../api/help.mjs"
-import Ffmpeg from "../api/ffmpeg.mjs"
-
-const exit = process.exit
+import Ffmpeg from "../api/ffmpeg.js"
+import Help from "../api/help.js"
 
 const argv = minimist(process.argv.slice(3), {
     string: ["ratio"],
@@ -34,21 +32,22 @@ if (argv.help) {
         .option("--debug", "Prints the debug info")
 
     echo($({ input: helper.toString(), sync: true })`cm`)
-    exit(0)
+    process.exit(0)
 }
 
 if (argv.debug) console.log(argv)
 
-/** @type {string} */
-const videoPath = argv.i ?? argv._?.[0]
-const videoExists = (await $`[[ -f ${videoPath} ]]`.exitCode) === 0
+const videoPath: string | undefined = argv.i ?? argv._?.[0]
 
 if (!videoPath) {
     console.log(chalk.red("Please provide a path to a video"))
-    exit(1)
-} else if (!videoExists) {
+    process.exit(1)
+}
+
+const videoExists = (await $`[[ -f ${videoPath} ]]`.exitCode) === 0
+if (!videoExists) {
     console.log(chalk.red("Provided path doesn't exists"))
-    exit(1)
+    process.exit(1)
 }
 
 console.log(`Input video path: ${chalk.cyan(videoPath)}`)
@@ -60,50 +59,43 @@ const ffprobeJson = JSON.parse(ffprobeInfo.stdout)
 
 if (!ffprobeJson.streams.length) {
     console.log(chalk.red("Failed to find any video stream on input path"))
-    exit(1)
+    process.exit(1)
 }
 
-/** @type {number} */
-const videoWidth = ffprobeJson.streams[0].width
-/** @type {number} */
-const videoHeight = ffprobeJson.streams[0].height
+const videoWidth = ffprobeJson.streams[0].width as number
+const videoHeight = ffprobeJson.streams[0].height as number
 
 class Crop {
-    /**
-     * @param w {number}
-     * @param h {number}
-     * @param x {number}
-     * @param y {number}
-     */
-    constructor(w, h, x, y) {
-        this.w = parseInt(w)
-        this.h = parseInt(h)
-        this.x = parseInt(x)
-        this.y = parseInt(y)
+    w: number
+    h: number
+    x: number
+    y: number
+
+    constructor(w: string | number, h: string | number, x: string | number, y: string | number) {
+        this.w = typeof w === "string" ? parseInt(w) : w
+        this.h = typeof h === "string" ? parseInt(h) : h
+        this.x = typeof x === "string" ? parseInt(x) : x
+        this.y = typeof y === "string" ? parseInt(y) : y
     }
 
-    /** @param amount {number} */
-    left(amount) {
+    left(amount: number) {
         amount = this.x - amount < 0 ? this.x : amount
         this.x -= amount
         this.w += amount
     }
 
-    /** @param amount {number} */
-    right(amount) {
+    right(amount: number) {
         amount = this.w + amount > videoWidth - this.x ? videoWidth - this.x : amount
         this.w += amount
     }
 
-    /** @param amount {number} */
-    top(amount) {
+    top(amount: number) {
         amount = this.y - amount < 0 ? this.y : amount
         this.y -= amount
         this.h += amount
     }
 
-    /** @param amount {number} */
-    bottom(amount) {
+    bottom(amount: number) {
         amount = this.h + amount > videoHeight - this.y ? videoHeight - this.y : amount
         this.h += amount
     }
@@ -114,8 +106,7 @@ class Crop {
     }
 }
 
-/** @type {Crop} */
-let crop
+let crop: Crop
 
 if (argv.ratio) {
     const [cropWidth, cropHeight] = argv.ratio.split(/\/|x|:/).map(parseFloat)
@@ -138,9 +129,10 @@ if (argv.ratio) {
     const command = $`ffmpeg -i ${videoPath} -t ${detectionTime} -vf ${filter} -f null - 2>&1 | tail | awk '/crop/ { print $NF }'`
 
     const detection = await spinner("Deteccting crop from video using ffmpeg...", () => command)
-    const detectedCrop = detection.lines().at(1).slice(5).split(":")
+    const detectedCrop = detection.lines().at(0)?.slice(5).split(":") as string[]
+    const [w, h, x, y] = detectedCrop
 
-    crop = new Crop(...detectedCrop)
+    crop = new Crop(w, h, x, y)
 }
 
 if (typeof argv.top === "number") crop.top(argv.top)
@@ -169,5 +161,5 @@ if (argv.preview) {
     if (argv.debug) console.log(crop)
 
     const ffmpegProgress = $`ffmpeg -i ${videoPath} -threads ${argv.threads ?? 4} -vf ${crop} ${outputPath} 2>&1`
-    await new Ffmpeg().progress(ffmpegProgress, [])
+    await Ffmpeg.progress(ffmpegProgress, [])
 }

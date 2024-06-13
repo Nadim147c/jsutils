@@ -2,7 +2,8 @@
     "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/package.json",
     "type": "module",
     "scripts": {
-        "dev": "tsc -w --noEmit"
+        "build": "tsc",
+        "dev": "tsc -w"
     },
     "dependencies": {
         "chalk": "^5.3.0",

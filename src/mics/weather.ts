@@ -1,11 +1,8 @@
 #!/usr/bin/env zx
-"use strict"
 
 import "zx/globals"
-import Help from "../api/help.mjs"
 import { homedir } from "os"
-
-const exit = process.exit
+import Help from "../api/help.js"
 
 const argv = minimist(process.argv.slice(3), {
     string: ["new-city", "city"],
@@ -20,8 +17,8 @@ if (argv.help) {
         .option("--new-city CITY", "Set a new default city for weather")
         .option("-h, --help", "Prints the help menu")
 
-    echo($({ input: helper.toString(), sync: true })`cm`)
-    exit(0)
+    helper.print()
+    process.exit(0)
 }
 
 const weatherData = await spinner("Getting weather information", async () => {
@@ -42,4 +39,4 @@ const weatherData = await spinner("Getting weather information", async () => {
     return $`curl -s ${url}`
 })
 
-echo(weatherData)
+console.log(weatherData.text())
