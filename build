@@ -1,10 +1,44 @@
 #!/usr/bin/bash
 
-pnpm build
+BIN_DIR="./bin"
 
-find 'bin' -type f | rg "\.js$" | rg -v 'api' | while read -r file; do
-	bin_name=$(echo "$file" | sed -r 's/\.js//')
-	echo "Renaming $file to $bin_name"
-	mv "$file" "$bin_name"
-	sudo chmod +x "$bin_name"
-done
+if [[ $(id -u) -ne 0 ]]; then
+	echo "This script requires root privileges."
+	exit 1
+fi
+
+if ! command -v pnpm &>/dev/null; then
+	echo "The pnpm command is missing. Please install pnpm"
+	exit 1
+fi
+
+build_bin() {
+	find $BIN_DIR -type f | rg "\.js$" | rg -v 'api' | while read -r file; do
+		bin_name=$(echo "$file" | sed -r 's/\.js//')
+		echo "Renaming $file to $bin_name"
+		mv "$file" "$bin_name"
+		chmod +x "$bin_name"
+	done
+}
+
+if [[ $1 == "-w" ]] || [[ $1 == "--watch" ]] || [[ $1 == "--dev" ]]; then
+	pnpm dev &
+	WATCH_PID=$!
+
+	if ! command -v inotifywait &>/dev/null; then
+		echo "The inotifywait command is missing. Please install inotify-tools"
+	fi
+
+	echo "Running as watch mode..."
+	while true; do
+		inotifywait -e create,delete,move,modify,close_write -r $BIN_DIR || break
+		echo "Rebuilding from typescript files"
+		build_bin
+	done
+
+	kill $WATCH_PID
+else
+	echo "Building from typescript files"
+	pnpm build
+	build_bin
+fi
