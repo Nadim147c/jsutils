@@ -1,3 +1,5 @@
+import size from "window-size"
+
 type Argument = {
     argument: string
     description: string
@@ -31,9 +33,9 @@ export default class Help {
         return this
     }
 
-    _warp(val: string, des: string, maxSize: number) {
+    private _warp(val: string, des: string, maxSize: number) {
         const tab = " ".repeat(4)
-        const columnSize = process.stdout.columns
+        const columnSize = size.get().width ?? process.stdout.columns
         const indentSize = maxSize + 8
         const indent = " ".repeat(indentSize)
 
