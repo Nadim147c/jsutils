@@ -1,5 +1,4 @@
 #!/usr/bin/env zx
-"use strict"
 
 import crypto from "crypto"
 import { rm } from "fs/promises"

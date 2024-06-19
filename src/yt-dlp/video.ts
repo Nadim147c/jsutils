@@ -6,19 +6,6 @@ import Help from "../api/help.js"
 
 const exit = process.exit
 
-/** Argument parsed by the minimist plugin.
- * @type {{
- * _: string[]
- * section: string
- * cookies: string
- * browser: string
- * ext: string
- * resolution: string|number
- * threads: number
- * sponsorblock: boolean
- * help: boolean
- * debug: boolean
- * }} */
 const argv = minimist(process.argv.slice(3), {
     alias: { help: ["h"], resolution: ["r"] },
     boolean: ["help", "sponsorblock", "debug"],

@@ -1,5 +1,4 @@
 #!/usr/bin/env zx
-"use strict"
 
 import "zx/globals"
 import Help from "../api/help.js"

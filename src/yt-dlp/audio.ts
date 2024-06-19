@@ -1,14 +1,9 @@
 #!/usr/bin/env zx
 
-"use strict"
-
 import os from "os"
 import "zx/globals"
 import Help from "../api/help.js"
 
-type Arguments = {
-    sponsorblock: boolean
-}
 const argv = minimist(process.argv.slice(3), {
     alias: { help: ["h"] },
     boolean: ["help", "sponsorblock", "debug", "yt-music"],

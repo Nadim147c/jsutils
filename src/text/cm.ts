@@ -1,5 +1,4 @@
 #!/usr/bin/env zx
-"use strict"
 
 import { Chalk } from "chalk"
 import "zx/globals"
