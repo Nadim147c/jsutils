@@ -1,6 +1,7 @@
-directories=("ffmpeg" "yt-dlp" "text" "mics")
+#!/bin/bash
 
-# Loop over the array elements
+directories=("ffmpeg" "yt-dlp" "text" "mics" "systemd")
+
 for dir_name in "${directories[@]}"; do
 	current_path="$(dirname $0)/bin/$dir_name"
 	export PATH="$PATH:$current_path"

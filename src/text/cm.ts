@@ -10,9 +10,9 @@ const argv = minimist(process.argv.slice(3), {
 })
 
 if (argv.help) {
-    const helper = new Help("Usage: help_command | fm")
+    const helper = new Help("Usage: help_command | cm")
     helper.option("-h, --help", "Prints the help menu")
-    echo($({ input: helper.toString(), sync: true })`cm`)
+    helper.print()
     process.exit(0)
 }
 

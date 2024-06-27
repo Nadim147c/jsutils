@@ -2,11 +2,6 @@
 
 BIN_DIR="./bin"
 
-if [[ $(id -u) -ne 0 ]]; then
-	echo "This script requires root privileges."
-	exit 1
-fi
-
 if ! command -v pnpm &>/dev/null; then
 	echo "The pnpm command is missing. Please install pnpm"
 	exit 1
@@ -15,9 +10,12 @@ fi
 build_bin() {
 	find $BIN_DIR -type f | rg "\.js$" | rg -v 'api' | while read -r file; do
 		bin_name=$(echo "$file" | sed -r 's/\.js//')
-		echo "Renaming $file to $bin_name"
-		mv "$file" "$bin_name"
-		chmod +x "$bin_name"
+		echo "Copy content of $file to $bin_name"
+		cat "$file" >"$bin_name"
+		if ! test -x "$bin_name"; then
+			echo "adding execute permission to $bin_name"
+			sudo chmod +x "$bin_name"
+		fi
 	done
 }
 

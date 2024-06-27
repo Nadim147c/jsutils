@@ -7,11 +7,14 @@
     },
     "dependencies": {
         "chalk": "^5.3.0",
+        "inquirer": "^9.3.1",
         "log-update": "^6.0.0",
         "window-size": "^1.1.1",
         "zx": "^8.1.2"
     },
     "devDependencies": {
-        "@types/window-size": "^1.1.4"
+        "@types/inquirer": "^9.0.7",
+        "@types/window-size": "^1.1.4",
+        "typescript": "^5.5.2"
     }
 }
