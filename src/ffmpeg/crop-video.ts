@@ -30,7 +30,8 @@ if (argv.help) {
         .option("-h, --help", "Prints the help menu")
         .option("--debug", "Prints the debug info")
 
-    echo($({ input: helper.toString(), sync: true })`cm`)
+    helper.print()
+
     process.exit(0)
 }
 

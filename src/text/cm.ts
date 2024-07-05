@@ -10,7 +10,9 @@ const argv = minimist(process.argv.slice(3), {
 })
 
 if (argv.help) {
-    const helper = new Help("Usage: help_command | cm")
+    const helper = new Help(
+        "Usage: help_command | cm\n This parser uses regex and mostly inacurate\n Consider using 'bat -pl help'"
+    )
     helper.option("-h, --help", "Prints the help menu")
     helper.print()
     process.exit(0)

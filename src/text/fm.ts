@@ -17,20 +17,23 @@ if (argv.help) {
 
 const stdinContent = await stdin()
 
-const input = stdinContent
+const colorizedContent =
+    $({ input: stdinContent, sync: true, nothrow: true })`bat --color=always -plhelp`?.toString() || stdinContent
+
+const input = colorizedContent
     .split("\n")
     .map((line, i) => `${i + 1} ${line}`)
     .join("\n")
 
 const env = process.env
-env.CONTENT = stdinContent
+env.CONTENT = colorizedContent
 
 const $$ = $({ input, env, nothrow: true })
 const lineNumber =
-    await $$`fzf --border-label 'Fuzzy Help Reader' --preview-label 'Grep Preview' --preview='echo $CONTENT | tail -n +{1} | cm' | cut -d ' ' -f1`
+    await $$`fzf --ansi --border-label 'Fuzzy Help Reader' --preview-label 'Grep Preview' --preview='echo $CONTENT | tail -n +{1}' | cut -d ' ' -f1`
 
 if (!lineNumber.stdout.trim()) process.exit(0)
 
-const cut = await $({ input: stdinContent })`tail -n ${`+${lineNumber.stdout.trim()}`} | head -n 20 | cm`
+const cut = await $({ input: colorizedContent })`tail -n ${`+${lineNumber.stdout.trim()}`} | head -n 20`
 
 console.log(cut.stdout)
