@@ -20,6 +20,9 @@ importers:
       window-size:
         specifier: ^1.1.1
         version: 1.1.1
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
       zx:
         specifier: ^8.1.2
         version: 8.1.2
@@ -338,6 +341,9 @@ packages:
     resolution: {integrity: sha512-G8ura3S+3Z2G+mkgNRq8dqaFZAuxfsxpBB8OCTGRTCtp+l/v9nbFNmCUP1BZMts3G1142MsZfn6eeUKrr4PD1Q==}
     engines: {node: '>=18'}
 
+  zod@3.23.8:
+    resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
+
   zx@8.1.2:
     resolution: {integrity: sha512-zkCiXKh8D/eo6r58OmJvO5mc2NthcSRvysb3fuS6VQlHPbEPBcxduRwM3m6ZfHj+7cLHcrahCnuO2TDAbW+6xw==}
     engines: {node: '>= 12.17.0'}
@@ -649,6 +655,8 @@ snapshots:
       ansi-styles: 6.2.1
       string-width: 7.1.0
       strip-ansi: 7.1.0
+
+  zod@3.23.8: {}
 
   zx@8.1.2:
     optionalDependencies:

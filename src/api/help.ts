@@ -13,7 +13,6 @@ type Option = {
 export default class Help {
     private _options: Option[] = []
 
-    /**@type {{argument:string, description: string}[]} */
     private _arguments: Argument[] = []
 
     _usages = "command [OPTIONS] [ARGUMENTS] "

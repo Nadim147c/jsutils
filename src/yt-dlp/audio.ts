@@ -6,7 +6,7 @@ import Help from "../api/help.js"
 
 const argv = minimist(process.argv.slice(3), {
     alias: { help: ["h"] },
-    boolean: ["help", "sponsorblock", "debug", "yt-music"],
+    boolean: ["help", "sponsorblock", "debug"],
 })
 
 if (argv.help) {
