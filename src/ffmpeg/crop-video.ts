@@ -18,7 +18,6 @@ if (argv.help) {
             "--ratio ASPECT_RATIO",
             "Use a ratio instead of auto detect to crop. (ex: --ratio 1/2, --ratio 18*9, --ratio 16:9)"
         )
-        .option("--auto", "Auto detect black bar to crop. Enable by default but disabled when --ratio is passed.")
         .option("--white", "Auto detect white bar instead of black to crop")
         .option("--top PIXEL", "Number of pixel to add to the top after calculating the crop")
         .option("--bottom PIXEL", "Number of pixel to add to the bottom after calculating the crop")
