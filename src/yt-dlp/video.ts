@@ -14,6 +14,7 @@ const exts = [
     z.literal("mov"),
     z.literal("webm"),
 ] as const
+const playlistRegex = /\d*:?\d*:?\d/
 const args = new Arguments({
     _: z.array(z.string()).min(1, "Missing argument URL. Please provide an url."),
     __: z.array(z.string()).optional(),
@@ -23,6 +24,7 @@ const args = new Arguments({
     browser: z.string().optional(),
     resolution: z.number().int().optional(),
     threads: z.number().int().default(1),
+    playlist: z.string().regex(playlistRegex).optional(),
     sponsorblock: z.boolean().default(true),
     ext: z.union(exts).default("mp4"),
     help: z.boolean().optional(),
@@ -39,6 +41,10 @@ helper
     .option("--browser BROWSER", "Name of the browser to use cookies from")
     .option("--ext FORMAT", "Containers that may be used when merging format")
     .option("--threads NUMBER", "Number of concurrent downloads. Default is 1")
+    .option(
+        "--playlist INDEX",
+        'Comma separated index of the items to download. You can specify a range using "[START]:[STOP][:STEP]".'
+    )
     .option("--no-sponsorblock", "Disable sponsorblock for downloaded video. Default is on")
     .option("-h, --help", "Prints the help menu")
     .option("--debug", "Prints the debug info")
@@ -56,7 +62,8 @@ const argv = args.parse(helper, {
 
 if (argv.debug) console.log(argv)
 
-const outputTemplate = `${os.homedir()}/Downloads/Video/%(title)s-%(id)s.%(ext)s`
+let outputTemplate = `${os.homedir()}/Downloads/Video/%(title)s-%(id)s.%(ext)s`
+if (argv.playlist) outputTemplate = `${os.homedir()}/Downloads/Video/%(playlist)s/%(title)s-%(id)s.%(ext)s`
 
 let format = "bv+ba/b"
 if (argv.format === "null") {
@@ -84,6 +91,7 @@ if (argv.sponsorblock) ytDlpArgs.push("--sponsorblock-remove", "all")
 if (argv.section) ytDlpArgs.push("--download-sections", argv.section)
 if (argv.cookies) ytDlpArgs.push("--cookies", argv.cookies)
 if (argv.browser) ytDlpArgs.push("--cookies-from-browser", argv.browser)
+if (argv.playlist) ytDlpArgs.push("--yes-playlist", "--lazy-playlist", "--playlist-items", argv.playlist)
 
 let url = argv._[0]
 
