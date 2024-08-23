@@ -51,11 +51,14 @@ export default class Ffmpeg {
             const barSize = Math.round((process.stdout.columns || 80) * 0.3)
 
             const barCompleteCount = Math.round((barSize * percentage) / 100)
-            const barComplete = chalk.green("━".repeat(barCompleteCount))
+            const barComplete =
+                barSize === barCompleteCount
+                    ? chalk.green("━".repeat(barCompleteCount))
+                    : chalk.green("━".repeat(Math.max(barCompleteCount - 1, 0))) + chalk.red("⬤")
             const barIncomplete = chalk.grey("━".repeat(barSize - barCompleteCount))
             const bar = barComplete + barIncomplete
 
-            const framesFormat = `Frames: ${chalk.blue(`${frames}/${totalFrames}`)}`
+            const framesFormat = `Frames: ${chalk.blue(`${frames}/${Math.round(totalFrames)}`)}`
             const fpsFormat = `FPS: ${chalk.green(fps)}`
             const speedFormat = `Speed: ${chalk.magenta(`${speed}x`)}`
             const etaFormat = `ETA: ${chalk.cyan(eta)}`

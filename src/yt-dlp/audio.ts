@@ -1,84 +1,67 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
+import { Command, Option } from "@commander-js/extra-typings"
 import os from "os"
-import { z } from "zod"
+import windowSize from "window-size"
 import "zx/globals"
-import Arguments from "../api/arguments.js"
-import Help from "../api/help.js"
+import { argParse } from "../api/arguments.js"
 
-const exts = [
-    z.literal("aac"),
-    z.literal("alac"),
-    z.literal("flac"),
-    z.literal("m4a"),
-    z.literal("mp3"),
-    z.literal("opus"),
-    z.literal("vorbis"),
-    z.literal("wav"),
-] as const
-const args = new Arguments({
-    _: z.array(z.string()).min(1, "Missing argument URL. Please provide an url."),
-    __: z.array(z.string()).optional(),
-    ext: z.union(exts).default("mp3"),
-    section: z.string().optional(),
-    cookies: z.string().optional(),
-    browser: z.string().optional(),
-    threads: z.number().int().min(1).default(1),
-    sponsorblock: z.boolean(),
-    help: z.boolean().optional(),
-    debug: z.boolean().optional(),
-})
+const extOption = new Option("-e, --extension <container>", "Containers that may be used when merging format.")
+    .choices(["aac", "alac", "flac", "m4a", "mp3", "opus", "vorbis", "wav"])
+    .default("mp3")
 
-const helper = new Help("Usage: video [OPTIONS] URL")
-helper.argument("URL", "url of the video to download")
-helper
-    .option("--section REGEX", "Section of the video to download. Timestamp must start with * (ex: '*0.11-0.50')")
-    .option("-c, --cookies FILE", "Netscape formatted file to read cookies from and dump cookie jar in")
-    .option("--browser BROWSER", "Name of the browser to use cookies from")
-    .option("--threads NUMBER", "Number of concurrent downloads. Default is 1")
-    .option("--no-sponsorblock", "Disable sponsorblock for downloaded video. Default is on")
-    .option("-h, --help", "Prints the help menu")
+const program = new Command("audio")
+    .description("Download audio using yt-dlp of various sites.")
+    .argument("<URL>", "url of the audio/video to download the audio")
+    .option("--section <regex>", "Section of the audio to download. Timestamp must start with * (ex: '*0.11-0.50').")
+    .option("-c, --cookies <file>", "Netscape formatted file to read cookies from and dump cookie jar in.")
+    .option("--browser <browser>", "Name of the browser to use cookies from")
+    .addOption(extOption)
+    .option("--no-sponsorblock", "disable sponsorblock mark")
+    .option("--playlist [playlist_index]", 'You can specify a range using "[START]:[STOP][:STEP]".')
+    .option("--threads <number>", "Number of concurrent downloads.", argParse("int"), 4)
     .option("--debug", "Prints the debug info")
+    .configureHelp({ helpWidth: windowSize?.get()?.width })
+    .action(async (url, options) => {
+        if (options.debug) console.log(options)
 
-const argv = args.parse(helper, {
-    alias: { h: "help" },
-    boolean: ["help", "sponsorblock", "debug"],
-    default: { sponsorblock: true },
-})
+        let outputTemplate = `${os.homedir()}/Downloads/Video/%(title)s-%(id)s.%(ext)s`
+        if (options.playlist) outputTemplate = `${os.homedir()}/Downloads/Video/%(playlist)s/%(title)s-%(id)s.%(ext)s`
 
-if (typeof argv.sponsorblock === "undefined") argv.sponsorblock = true
-if (typeof argv.threads === "undefined") argv.threads = 1
+        const ytDlpArgs = [
+            "--extract-audio",
+            "--no-playlist",
+            "--audio-quality=0",
+            `--format=ba/b`,
+            `--audio-format=${options.extension}`,
+            `--concurrent-fragments=${options.threads}`,
+            `--output=${outputTemplate}`,
+            "--sponsorblock-mark=all",
+            "--sub-langs=all",
+            "--embed-subs",
+            "--embed-thumbnail",
+            "--embed-metadata",
+            "--embed-chapters",
+            "--list-formats",
+            "--no-simulate",
+            "--color=always",
+        ]
 
-if (argv.debug) console.log(argv)
+        if (!options.sponsorblock) ytDlpArgs.push("--no-sponsorblock")
+        if (options.section) ytDlpArgs.push("--download-sections", options.section)
+        if (options.cookies) ytDlpArgs.push("--cookies", options.cookies)
+        if (options.browser) ytDlpArgs.push("--cookies-from-browser", options.browser)
+        if (options.playlist) ytDlpArgs.push("--yes-playlist", "--lazy-playlist")
+        if (options.playlist && typeof options.playlist !== "boolean")
+            ytDlpArgs.push(`--playlist-itmes=${options.playlist}`)
 
-const outputTemplate = `${os.homedir()}/Downloads/Audio/%(title)s-%(id)s.%(ext)s`
+        try {
+            url = new URL(url).toString()
+        } catch (err) {
+            url = `ytsearch:${url}`
+        }
 
-const format = "beataudio/best"
+        await $`yt-dlp ${ytDlpArgs} ${url}`.verbose(true).nothrow()
+    })
 
-const ytDlpArgs = [
-    "--extract-audio",
-    "--no-playlist",
-    "--audio-quality=0",
-    `--format=${format}`,
-    `--concurrent-fragments=${argv.threads}`,
-    `--output=${outputTemplate}`,
-    "--add-metadata",
-    "--embed-chapters",
-    "--list-formats",
-    "--no-simulate",
-    "--color=always",
-]
-
-if (argv.sponsorblock) ytDlpArgs.push("--sponsorblock-remove", "all")
-if (argv.section) ytDlpArgs.push("--download-sections", argv.section)
-if (argv.cookies) ytDlpArgs.push("--cookies", argv.cookies)
-if (argv.browser) ytDlpArgs.push("--cookies-from-browser", argv.browser)
-
-let url = argv._[0]
-try {
-    url = new URL(url).toString()
-} catch (err) {
-    url = `ytsearch:${url}`
-}
-
-await $`yt-dlp ${ytDlpArgs} ${url}`.verbose(true)
+program.parse()

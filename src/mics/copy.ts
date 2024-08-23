@@ -1,22 +1,17 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
 import "zx/globals"
-import Help from "../api/help.js"
 import Terminal from "../api/terminal.js"
+import { Command } from "@commander-js/extra-typings"
+import windowSize from "window-size"
 
-const argv = minimist(process.argv.slice(3), {
-    alias: { help: ["h"] },
-    boolean: ["help"],
-})
+const program = new Command("copy")
+    .description("Copy any string using ANSI escape sequance.")
+    .configureHelp({ helpWidth: windowSize?.get()?.width })
+    .action(async () => {
+        let text = process.argv.slice(2).join().trim()
+        if (!text) text = await stdin()
+        Terminal.copy(text)
+    })
 
-if (argv.help) {
-    const helper = new Help("Usage: 'command | copy' 'copy text'")
-    helper.option("-h, --help", "Prints the help menu")
-    helper.print()
-    process.exit(0)
-}
-
-let text = process.argv.slice(3).join().trim()
-if (!text) text = await stdin()
-
-Terminal.copy(text)
+program.parse()

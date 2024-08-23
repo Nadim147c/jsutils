@@ -1,82 +1,70 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
+import { Command, Option } from "@commander-js/extra-typings"
 import crypto from "crypto"
 import { rm } from "fs/promises"
+import windowSize from "window-size"
 import "zx/globals"
+import { argParse } from "../api/arguments.js"
 import Ffmpeg from "../api/ffmpeg.js"
-import Help from "../api/help.js"
 
-const exit = process.exit
+const loopOption = new Option("--loop <number>", "Number of time gif will loop.")
+    .argParser(argParse("int"))
+    .default(0, "infinte")
 
-const argv = minimist(process.argv.slice(3), {
-    string: ["ratio"],
-    alias: { help: ["h"], preview: ["p"] },
-    boolean: ["help", "preview", "debug"],
-})
+const program = new Command("ffgif")
+    .description("Convert any video file to gif without losing significant quality")
+    .argument("<input>", "Path to input video")
+    .argument("[output]", "Path to output gif. (optional)")
+    .option("--threads <number>", "Number of threads to use when transcoding.", argParse("int"), 4)
+    .addOption(loopOption)
+    .option("--preview", "Show a preview of the crop instead of outputting it")
+    .option("--debug", "Prints the debug info")
+    .configureHelp({ helpWidth: windowSize?.get()?.width })
+    .action(async (input, output, options) => {
+        const videoExists = (await $`[[ -f ${input} ]]`.exitCode) === 0
+        if (!input) {
+            console.error("Please provide a path to a video")
+            process.exit(1)
+        } else if (!videoExists) {
+            console.error("Provided path doesn't exists")
+            process.exit(1)
+        }
 
-if (argv.help) {
-    const helper = new Help("Usage: crop-video [OPTIONS] INPUT [OUTPUT]")
-    helper.argument("INPUT", "Path to input video").argument("OUTPUT", "Path to output gif. (optional)")
-    helper
-        .option("--threads NUMBER", "Number of threads to use when transcoding. Default is 4")
-        .option("--loop NUMBER", "Number of time gif will loop. Default is 0 meaning infinite loop.")
-        .option("--preview", "Show a preview of the crop instead of outputting it")
-        .option("-h, --help", "Prints the help menu")
-        .option("--debug", "Prints the debug info")
+        console.log(`Input video path: ${chalk.cyan(input)}`)
 
-    echo($({ input: helper.toString(), sync: true })`cm`)
-    exit(0)
-}
+        const ffprobeProcess = $`ffprobe -v error -select_streams v:0 -show_entries format=duration -show_entries stream=width,height -of json ${input}`
+        const ffprobeInfo = await spinner("Retrieving height and width", () => ffprobeProcess)
 
-if (argv.debug) console.log(argv)
+        const ffprobeJson = JSON.parse(ffprobeInfo.stdout)
 
-/** @type {string} */
-const videoPath = argv.i ?? argv._?.[0]
-const videoExists = (await $`[[ -f ${videoPath} ]]`.exitCode) === 0
+        if (!ffprobeJson.streams.length) {
+            console.log(chalk.red("Failed to find any video stream on input path"))
+            process.exit(1)
+        }
 
-if (!videoPath) {
-    console.log(chalk.red("Please provide a path to a video"))
-    exit(1)
-} else if (!videoExists) {
-    console.log(chalk.red("Provided path doesn't exists"))
-    exit(1)
-}
+        const videoWidth: number = ffprobeJson.streams[0].width
+        const videoHeight: number = ffprobeJson.streams[0].height
 
-console.log(`Input video path: ${chalk.cyan(videoPath)}`)
+        const palette = `${crypto.randomUUID()}.png`
+        const palettegenProcess = $`ffmpeg -i ${input} -vf palettegen -threads ${options.threads} ${palette}`.quiet()
+        await spinner("Generating palette for gif...", () => palettegenProcess)
 
-const ffprobeProcess = $`ffprobe -v error -select_streams v:0 -show_entries format=duration -show_entries stream=width,height -of json ${videoPath}`
-const ffprobeInfo = await spinner("Retrieving height and width", () => ffprobeProcess)
+        if (!output) {
+            const inputPathSplit = input.split(".")
+            inputPathSplit.splice(inputPathSplit.length - 1, 1, "gif")
+            output = inputPathSplit.join(".")
+        }
 
-const ffprobeJson = JSON.parse(ffprobeInfo.stdout)
+        const filterGraph = `fps=10,scale=${videoWidth}:${videoHeight}[x];[x][1:v]paletteuse`
 
-if (!ffprobeJson.streams.length) {
-    console.log(chalk.red("Failed to find any video stream on input path"))
-    exit(1)
-}
+        if (options.preview) {
+            await $`ffplay -i ${input} -i ${palette} -loop ${options.loop} -filter_complex ${filterGraph}`.quiet()
+        } else {
+            const ffmpegProcess = $`ffmpeg -i ${input} -i ${palette} -loop ${options.loop} -threads ${options.threads} -filter_complex ${filterGraph} ${output} 2>&1`
+            await Ffmpeg.progress(ffmpegProcess, ["-filter_complex", filterGraph])
+            await rm(palette)
+        }
+    })
 
-/** @type {number} */
-const videoWidth = ffprobeJson.streams[0].width
-
-/** @type {number} */
-const videoHeight = ffprobeJson.streams[0].height
-
-const palette = `${crypto.randomUUID()}.png`
-const palettegenProcess = $`ffmpeg -i ${videoPath} -vf palettegen -threads ${argv.threads ?? 4} ${palette}`.quiet()
-await spinner("Generating palette for gif...", () => palettegenProcess)
-
-let outputPath = argv.o ?? argv._?.[1]
-if (!outputPath) {
-    const inputPathSplit = videoPath.split(".")
-    inputPathSplit.splice(inputPathSplit.length - 1, 1, "gif")
-    outputPath = inputPathSplit.join(".")
-}
-
-const filterGraph = `fps=10,scale=${videoWidth}:${videoHeight}[x];[x][1:v]paletteuse`
-
-if (argv.preview) {
-    await $`ffplay -i ${videoPath} -i ${palette} -loop ${argv.loop ?? 0} -filter_complex ${filterGraph}`.quiet()
-} else {
-    const ffmpegProcess = $`ffmpeg -i ${videoPath} -i ${palette} -loop ${argv.loop ?? 0} -threads ${argv.threads ?? 4} -filter_complex ${filterGraph} ${outputPath} 2>&1`
-    await Ffmpeg.progress(ffmpegProcess, ["-filter_complex", filterGraph])
-    await rm(palette)
-}
+program.parse()

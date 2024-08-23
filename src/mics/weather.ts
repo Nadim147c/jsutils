@@ -1,42 +1,31 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
-import "zx/globals"
+import { Command } from "@commander-js/extra-typings"
 import { homedir } from "os"
-import Help from "../api/help.js"
+import windowSize from "window-size"
+import "zx/globals"
 
-const argv = minimist(process.argv.slice(3), {
-    string: ["new-city", "city"],
-    alias: { help: ["h"] },
-    boolean: ["help"],
-})
+const program = new Command("weather")
+    .option("--city <city>", "City to fetch weather info.")
+    .option("--new-city <city>", "Set a new default city for weather")
+    .configureHelp({ helpWidth: windowSize?.get()?.width })
+    .action(async (option) => {
+        const locationFile = homedir() + "/.city"
 
-if (argv.help) {
-    const helper = new Help("Usage: weather [OPTIONS]")
-    helper
-        .option("--city CITY", "City to fetch weather info.")
-        .option("--new-city CITY", "Set a new default city for weather")
-        .option("-h, --help", "Prints the help menu")
+        let location = await fs.readFile(locationFile, "utf-8").catch(console.error)
 
-    helper.print()
-    process.exit(0)
-}
+        if (!location || option.newCity) {
+            location = option.newCity ? option.newCity : await question("What is your location? ")
+            await fs.writeFile(locationFile, location, "utf-8")
+        }
 
-const weatherData = await spinner("Getting weather information", async () => {
-    const locationFile = homedir() + "/.city"
+        const url = new URL("https://www.wttr.in")
+        url.pathname = `/${argv.city ? argv.city : location.trim()}`
+        url.search = "?1Fq"
 
-    let location = await $`cat ${locationFile}`.nothrow()
+        const weatherData = await spinner("Getting weather information", async () => $`curl -s ${url}`.nothrow())
 
-    let locationName
-    if (!location.stdout || argv["new-city"]) {
-        locationName = argv["new-city"] ? argv["new-city"] : await question("What is your location? ")
-        await fs.writeFile(locationFile, locationName, "utf-8")
-    } else {
-        locationName = location.stdout
-    }
+        echo(weatherData)
+    })
 
-    const url = `wttr.in/${argv.city ? argv.city : locationName}?1Fq`
-
-    return $`curl -s ${url}`
-})
-
-console.log(weatherData.text())
+program.parse()

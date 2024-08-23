@@ -1,25 +1,20 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
+import { Command } from "@commander-js/extra-typings"
+import windowSize from "window-size"
 import "zx/globals"
-import Help from "../api/help.js"
 import Terminal from "../api/terminal.js"
 
-const argv = minimist(process.argv.slice(3), {
-    alias: { help: ["h"] },
-    boolean: ["help"],
-})
+const program = new Command("title")
+    .description("Set the title of the terminal.")
+    .allowUnknownOption()
+    .configureHelp({ helpWidth: windowSize?.get()?.width })
+    .action(async () => {
+        let title = process.argv.slice(2).join().trim()
 
-if (argv.help) {
-    const helper = new Help("Usage: 'command | copy' 'copy text'")
-    helper.option("-h, --help", "Prints the help menu")
-    helper.print()
-    process.exit(0)
-}
+        if (!title) title = await question("What will be the title of terminal? ")
 
-let title = process.argv.slice(3).join().trim()
+        Terminal.setTitle(title)
+    })
 
-if (!title) {
-    title = await question("What will be the title of terminal? ")
-}
-
-Terminal.setTitle(title)
+program.parse()

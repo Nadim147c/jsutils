@@ -1,49 +1,61 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
-import "zx/globals"
-import Help from "../api/help.js"
+import { Command, InvalidOptionArgumentError, Option } from "@commander-js/extra-typings"
 import { join } from "path"
+import windowSize from "window-size"
+import "zx/globals"
 
-const argv = minimist(process.argv.slice(3), {
-    alias: { help: ["h"] },
-    boolean: ["help"],
-})
-
-if (argv.help) {
-    const helper = new Help("Usage: organize-files DIRECTORY")
-    helper.argument("DIRECTORY", "Directory you want to organize")
-    helper.option("-h, --help", "Prints the help menu")
-    helper.print()
-    process.exit(0)
+function typeParse(value: string, previous: string[]) {
+    const typeMap = value.split(":")
+    if (typeMap.length !== 2) throw new InvalidOptionArgumentError("Invalid type mapping")
+    return previous.concat([value])
 }
 
-const fileTypes = new Map<string, string>()
+const typeMapOption = new Option("-t, --type-map <Extension:Type...>", "Map addional type or overright existion type.")
+    .default([], "None")
+    .argParser(typeParse)
 
-;["png", "jpg", "jpeg", "svg", "ico", "gif"].forEach((ext) => fileTypes.set(ext, "Image"))
-;["mp4", "mkv"].forEach((ext) => fileTypes.set(ext, "Video"))
-;["mp3", "wav", "m4a", "flac"].forEach((ext) => fileTypes.set(ext, "Audio"))
-;["pdf", "txt", "md"].forEach((ext) => fileTypes.set(ext, "Document"))
+const program = new Command("organize-files")
+    .argument("<DIRECTORY>", "Directory you want to organize")
+    .addOption(typeMapOption)
+    .option("--debug", "print debug info")
+    .configureHelp({ helpWidth: windowSize.get()?.width })
+    .action(async (directory, options) => {
+        if (options.debug) console.log({ directory, options })
 
-const directory = argv._.at(0)
+        const fileTypes = new Map<string, string>()
 
-if (!directory) {
-    console.log("Please provide a directory")
-    process.exit(1)
-}
+        const defaultTypes = {
+            Image: ["png", "jpg", "jpeg", "svg", "ico", "gif", "webp"],
+            Video: ["mp4", "mkv", "webm"],
+            Audio: ["mp3", "wav", "m4a", "flac"],
+            Document: ["pdf", "txt", "md", "html"],
+            Script: ["js", "ts", "py"],
+            Archive: ["tar", "gz", "zip", "rar"],
+            Torrent: ["torrent"],
+        }
 
-const files = await $`ls ${directory}`
+        // I can do worse than python devs
+        for (const [t, exts] of Object.entries(defaultTypes)) for (const e of exts) fileTypes.set(e, t)
+        for (const t of options.typeMap) fileTypes.set(...(t.split(":") as [string, string]))
 
-for (const file of files.lines()) {
-    const extension = file.split(".").at(-1) ?? ""
-    const fileType = fileTypes.get(extension) ?? "Other"
+        if (options.debug) console.log(fileTypes)
 
-    const pasteDir = join(directory, fileType)
-    const filePath = join(directory, file)
+        const files = await fs.readdir(directory)
 
-    if ((await $`[[ ! -d ${pasteDir} ]]`.exitCode) === 0) await $`mkdir -p ${pasteDir}`
-    if ((await $`[[ ! -f ${filePath} ]]`.exitCode) === 0) continue
+        for (const file of files) {
+            const extension = file.split(".").at(-1) ?? ""
+            const fileType = fileTypes.get(extension) ?? "Other"
 
-    console.log(`Copying ${filePath} to ${pasteDir}`)
+            const pasteDir = join(directory, fileType)
+            const filePath = join(directory, file)
 
-    await $`mv ${filePath} ${pasteDir}`.nothrow()
-}
+            if ((await $`[[ ! -d ${pasteDir} ]]`.exitCode) === 0) await $`mkdir -p ${pasteDir}`
+            if ((await $`[[ ! -f ${filePath} ]]`.exitCode) === 0) continue
+
+            const out = await $`mv -v ${filePath} ${pasteDir}`.nothrow()
+            echo(out)
+        }
+    })
+
+program.parse()

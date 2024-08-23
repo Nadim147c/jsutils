@@ -8,6 +8,7 @@
         "checkJs": true,
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
+        "resolvePackageJsonImports": true,
         "strict": true,
         "skipLibCheck": true
     },

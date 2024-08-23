@@ -2,8 +2,8 @@
 
 BIN_DIR="./bin"
 
-if ! command -v pnpm &>/dev/null; then
-	echo "The pnpm command is missing. Please install pnpm"
+if ! command -v bun run &>/dev/null; then
+	echo "The bun run command is missing. Please install pnpm"
 	exit 1
 fi
 
@@ -20,7 +20,7 @@ build_bin() {
 }
 
 if [[ $1 == "-w" ]] || [[ $1 == "--watch" ]] || [[ $1 == "--dev" ]]; then
-	pnpm dev &
+	bun run tsc -w &
 	WATCH_PID=$!
 
 	if ! command -v inotifywait &>/dev/null; then
@@ -37,6 +37,6 @@ if [[ $1 == "-w" ]] || [[ $1 == "--watch" ]] || [[ $1 == "--dev" ]]; then
 	kill $WATCH_PID
 else
 	echo "Building from typescript files"
-	pnpm build
+	bun run tsc
 	build_bin
 fi

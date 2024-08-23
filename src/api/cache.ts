@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from "axios"
+import crypto from "crypto"
 import fs from "fs-extra"
 import path from "path"
-import crypto from "crypto"
 
 export default class Cache {
     static async axiosGet(url: string, config?: AxiosRequestConfig) {

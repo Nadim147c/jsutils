@@ -1,18 +1,20 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
 import "zx/globals"
 import Ffmpeg from "../api/ffmpeg.js"
+import { Command } from "@commander-js/extra-typings"
+import windowSize from "window-size"
 
-const argv = minimist(process.argv.slice(3), {
-    alias: { help: ["h"] },
-    boolean: ["help", "debug"],
-})
+const program = new Command("ffpro")
+    .allowUnknownOption(true)
+    .description(
+        "ffpro commands show progress bar for your ffmpeg commands. Run man ffmpeg or ffmpeg --help for ffmpeg releted help."
+    )
+    .configureHelp({ helpWidth: windowSize?.get()?.width })
+    .action(async () => {
+        const args = process.argv.slice(2)
+        const ffmpegProcess = $`ffmpeg ${args} 2>&1`
+        await Ffmpeg.progress(ffmpegProcess)
+    })
 
-if (argv.debug) console.log(argv)
-
-const args = process.argv.slice(3).filter((item) => item !== "--debug")
-
-if (argv.help || !args.length) console.error("ffpro is wrapper for ffmpeg")
-
-const ffmpegProcess = $`ffmpeg ${args} 2>&1`
-await Ffmpeg.progress(ffmpegProcess)
+program.parse()

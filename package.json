@@ -2,23 +2,25 @@
     "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/package.json",
     "type": "module",
     "scripts": {
-        "build": "tsc",
-        "dev": "tsc -w"
+        "dev": "./build -w"
     },
     "dependencies": {
-        "@types/fs-extra": "^11.0.4",
-        "axios": "^1.7.2",
+        "@commander-js/extra-typings": "^12.1.0",
+        "axios": "^1.7.5",
+        "boxen": "^8.0.1",
         "chalk": "^5.3.0",
+        "commander": "12.1.0",
         "fs-extra": "^11.2.0",
-        "inquirer": "^9.3.1",
-        "log-update": "^6.0.0",
+        "inquirer": "10",
+        "log-update": "^6.1.0",
         "window-size": "^1.1.1",
         "zod": "^3.23.8",
-        "zx": "^8.1.2"
+        "zx": "^8.1.4"
     },
     "devDependencies": {
+        "@types/fs-extra": "^11.0.4",
         "@types/inquirer": "^9.0.7",
         "@types/window-size": "^1.1.4",
-        "typescript": "^5.5.2"
+        "typescript": "^5.5.4"
     }
 }
