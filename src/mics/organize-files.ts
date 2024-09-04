@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { Command, InvalidOptionArgumentError, Option } from "@commander-js/extra-typings"
 import { join } from "path"

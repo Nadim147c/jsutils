@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { Command, Option } from "@commander-js/extra-typings"
 import crypto from "crypto"
@@ -33,21 +33,8 @@ const program = new Command("ffgif")
 
         console.log(`Input video path: ${chalk.cyan(input)}`)
 
-        const ffprobeProcess = $`ffprobe -v error -select_streams v:0 -show_entries format=duration -show_entries stream=width,height -of json ${input}`
-        const ffprobeInfo = await spinner("Retrieving height and width", () => ffprobeProcess)
-
-        const ffprobeJson = JSON.parse(ffprobeInfo.stdout)
-
-        if (!ffprobeJson.streams.length) {
-            console.log(chalk.red("Failed to find any video stream on input path"))
-            process.exit(1)
-        }
-
-        const videoWidth: number = ffprobeJson.streams[0].width
-        const videoHeight: number = ffprobeJson.streams[0].height
-
         const palette = `${crypto.randomUUID()}.png`
-        const palettegenProcess = $`ffmpeg -i ${input} -vf palettegen -threads ${options.threads} ${palette}`.quiet()
+        const palettegenProcess = $``.quiet()
         await spinner("Generating palette for gif...", () => palettegenProcess)
 
         if (!output) {
@@ -56,14 +43,17 @@ const program = new Command("ffgif")
             output = inputPathSplit.join(".")
         }
 
-        const filterGraph = `fps=10,scale=${videoWidth}:${videoHeight}[x];[x][1:v]paletteuse`
+        const filterGraph = `fps=10[x];[x][1:v]paletteuse`
 
         if (options.preview) {
-            await $`ffplay -i ${input} -i ${palette} -loop ${options.loop} -filter_complex ${filterGraph}`.quiet()
+            await $`ffmpeg -hide_banner -i ${input} -vf palettegen -f image2pipe - | \
+                    ffmpeg -hide_banner -i ${input} -i - -loop ${options.loop} -threads ${options.threads} -filter_complex ${filterGraph} -f gif - | \
+                    ffplay -i - `
+                .verbose()
+                .nothrow()
         } else {
-            const ffmpegProcess = $`ffmpeg -i ${input} -i ${palette} -loop ${options.loop} -threads ${options.threads} -filter_complex ${filterGraph} ${output} 2>&1`
-            await Ffmpeg.progress(ffmpegProcess, ["-filter_complex", filterGraph])
-            await rm(palette)
+            // const ffmpegProcess = $`ffmpeg -i ${input} -vf palettegen -f image2pipe - | ffmpeg -i ${input} -i ${palette} -loop ${options.loop} -threads ${options.threads} -filter_complex ${filterGraph} ${output} 2>&1`
+            // await Ffmpeg.progress(ffmpegProcess, ["-filter_complex", filterGraph])
         }
     })
 

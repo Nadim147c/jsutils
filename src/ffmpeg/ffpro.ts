@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import "zx/globals"
 import Ffmpeg from "../api/ffmpeg.js"

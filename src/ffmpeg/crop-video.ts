@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { Command, Option } from "@commander-js/extra-typings"
 import windowSize from "window-size"

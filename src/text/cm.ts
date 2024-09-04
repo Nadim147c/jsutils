@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { Command } from "@commander-js/extra-typings"
 import { Chalk } from "chalk"

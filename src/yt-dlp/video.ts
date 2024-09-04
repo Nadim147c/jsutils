@@ -1,9 +1,9 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 import { Command, Option } from "@commander-js/extra-typings"
 import os from "os"
 import windowSize from "window-size"
-import "zx/globals"
+import { $ } from "zx"
 import { argParse } from "../api/arguments.js"
 
 const extOption = new Option("-e, --extension <container>", "Containers that may be used when merging format")

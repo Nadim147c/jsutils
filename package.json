@@ -1,8 +1,10 @@
 {
     "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/package.json",
+    "name": "jsutils",
     "type": "module",
     "scripts": {
-        "dev": "./build -w"
+        "dev": "chokidar src/**/**.ts -c './build.ts {path}'",
+        "build": "./build.ts"
     },
     "dependencies": {
         "@commander-js/extra-typings": "^12.1.0",
@@ -18,9 +20,12 @@
         "zx": "^8.1.4"
     },
     "devDependencies": {
+        "@types/bun": "^1.1.8",
         "@types/fs-extra": "^11.0.4",
         "@types/inquirer": "^9.0.7",
         "@types/window-size": "^1.1.4",
+        "chokidar-cli": "^3.0.0",
+        "esbuild": "^0.23.1",
         "typescript": "^5.5.4"
     }
 }
